@@ -89,8 +89,8 @@ public class GrafBad {
         //no same edges is counted twice
         //same number of colors
         //add necessary roles, scenes and people to fulfil the diva criteria.
-        roles = actualV + 3; //min 1
-        scenes = test.size() + 2; //scenes is at most nr edges OBS: min 0
+        roles = nodes + 3; //min 1
+        scenes = edges + 3; //scenes is at most nr edges OBS: min 0
         actors = colors + 3; //min 1
 
         //print roles, scenes, actors.
@@ -100,9 +100,9 @@ public class GrafBad {
 
         //assign each diva plus a random person for both divas to play vs.
         //print divas roles assignment
-        io.println(2 + " " + 1); //role 1 can be played by person 1
-        io.println(2 + " " + 2); //role 2 can be played by person 2
-        io.println(2 + " " + 3); //role 3 can be played by person 3
+        io.println(1 + " " + 1); //role 1 can be played by person 1
+        io.println(1 + " " + 2); //role 2 can be played by person 2
+        io.println(1 + " " + 3); //role 3 can be played by person 3
 
         //print all other possible combinations divas do not play.
         //todo: check the iteration bounds
