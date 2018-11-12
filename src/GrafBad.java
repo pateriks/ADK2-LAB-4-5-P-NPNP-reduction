@@ -29,8 +29,9 @@ public class GrafBad {
         int nodes = io.getInt(); //nr hörn --> antal roller
         int edges = io.getInt(); //nr kanter --> roller i samma scen
         int colors = io.getInt(); //färger att färglägga --> antal personer
-        testV = new Boolean[nodes+1];
+        testV = new Boolean[nodes];
 
+        //System.err.println(testV.length);
         int roles, scenes, actors;
 
         //cleanup; remove dubbel länkar och isolerade noder
@@ -41,8 +42,8 @@ public class GrafBad {
             //check if there is an reverse edge
             int first = io.getInt();
             int second = io.getInt();
-            testV[first] = true;
-            testV[second] = true;
+            testV[first-1] = true;
+            testV[second-1] = true;
 
             //make direction irrelevant
             int tf;
@@ -57,16 +58,20 @@ public class GrafBad {
 
             //DEBUG: System.err.println("ts" + ts + " tf " + tf + " get " + test.containsKey(tf));
 
-            if(test.containsKey(tf )){
+            if(test.containsKey(tf)){
                 if(test.get(tf).contains(ts)){
-
+                    //Same edge as before
                     continue;
                 }else{
                     //System.out.println("a");
+                    //vertex containing several edged
+                    //push edge
+                    //System.err.println("pushing : " + ts);
                     test.get(tf).push(ts);
                 }
             }else {
 
+                //System.err.println("creating : " + ts);
                 //System.out.println("b");
                 LinkedList<Integer> addNew = new LinkedList<Integer>();
                 addNew.push(ts);
@@ -74,7 +79,7 @@ public class GrafBad {
             }
         }
         int actualV = 0;
-        for(int i = 1; i < testV.length; i++){
+        for(int i = 0; i < testV.length; i++){
             if(testV[i]){
                 actualV++;
             }
@@ -116,33 +121,39 @@ public class GrafBad {
         io.println(2 + " " + 2 + " " + 3);
 
         //print the remaining scenes
-        while(test.size() < (scenes-1)){
-
+        int connected = actualV;
+        while(connected < nodes){
             //System.out.println("I am here " + nodes);
-            int i = 0;
+            //look for empty nodes
+            int i;
             for(i = 0; i < testV.length; i++){
                 if(!testV[i]){
+                    //System.err.println("break");
+                    testV[i] = true;
                     break;
                 }
             }
+            connected++;
+            //make identical for now, check that they are identical later and fix
             LinkedList<Integer> addNew = new LinkedList<>();
-            if(nodes == 1) {
-                addNew.push(0);
-            }else {
-                addNew.push(r.nextInt(nodes));
-            }
-            test.put(i, addNew);
+            addNew.push(i+1);
+            //System.err.println("i " + i);
+            test.put(i+1, addNew); //+3 later
         }
+
         Set<Map.Entry<Integer, LinkedList<Integer>>> set = test.entrySet();
         for (Map.Entry<Integer, LinkedList<Integer>> edge : set){
             for(Integer value : edge.getValue()) {
                 int inc = -1;
-                while(value == edge.getKey()) {
+                //System.err.println("prevalue: " + value);
+                while(value == edge.getKey() && testV[value-1]) {
+                    //System.err.println("value: " + value);
                     value += inc;
-                    if(value == 0){
+                    if(value < 3){
                         inc = 1;
                     }
                 }
+                //System.err.println("post value: " + value);
                 io.println(2 + " " + (edge.getKey() + 3) + " " + (value + 3));
             }
         }
