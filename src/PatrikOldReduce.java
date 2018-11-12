@@ -66,7 +66,7 @@ public class PatrikOldReduce {
                     ts=second;
                 }
 
-                //DEBUG: System.err.println("ts" + ts + " tf " + tf + " get " + test.containsKey(tf));
+                //DEBUG: System.err.println("ts" + ts + " tf " + tf + " get " + testE.containsKey(tf));
 
                 if(test.containsKey(tf )){
                     if(test.get(tf).contains(ts)){
