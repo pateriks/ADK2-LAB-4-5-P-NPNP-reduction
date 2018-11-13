@@ -41,9 +41,17 @@ public class GrafBad {
         testV[0] = true;
         testV[1] = true;
         testV[2] = true;
+
+        //debug
         System.err.println("testV length: " + testV.length);
-        int roles, scenes, actors;
+
+        //input data pattern
         int realE = 0;
+        int activeV = 0;
+        int nactiveV = 0;
+
+        int roles, scenes, actors;
+
         //cleanup; remove dubbel länkar och check aktiva noder
         for(int i = 0; i < edges; i++){
             //check if there is an reverse edge
@@ -69,22 +77,25 @@ public class GrafBad {
                     //Same edge as before
                     continue;
                 }else{
+                    //debug
                     System.err.println("pushing : " + ts);
+
                     //new edge to add to node tf
                     realE++;
                     testE.get(tf).push(ts);
                 }
             }else {
+                //debug
                 System.err.println("creating : " + ts);
-                System.err.println("b");
+
                 LinkedList<Integer> addNew = new LinkedList<Integer>();
                 addNew.push(ts);
                 realE++;
                 testE.put(tf, addNew);
             }
         }
-        int activeV = 0;
-        int nactiveV = 0;
+
+        //count active and inactive nodes
         for(int i = 0; i < testV.length; i++){
             if(testV[i]){
                 activeV++;
@@ -92,15 +103,23 @@ public class GrafBad {
                 nactiveV++;
             }
         }
+
+        //debug
         System.err.println("S:testE: " + testE.size());
-        System.err.println("activeV: " + activeV);
         System.err.println("S:testV: " + testV.length);
-        System.err.println("S:realE: " + realE);
+        System.err.println("activeV: " + activeV);
+        System.err.println("realE: " + realE);
         System.err.println("nactive: " + nactiveV);
+
         //add necessary roles, scenes and people to fulfil the diva criteria.
         roles = nodes + 3; //min 1
         scenes = realE + nactiveV + 2; //scenes is at most nr edges OBS: min 0
+        //todo: this is a very large number
         actors = colors + 3; //min 1
+        //todo: verify this, passes kattis though
+        if(colors > roles){
+            actors = roles;
+        }
 
         //print roles, scenes, actors.
         io.println(roles);
@@ -132,7 +151,12 @@ public class GrafBad {
 
         //print the remaining scenes
         int connected = activeV;
+
+        //debug
         System.err.println("pre connected: " + connected);
+
+        //do this once, iterate roles-connected times
+        //makes isolated nodes active
         int i = 0;
         while(connected < roles){
             System.err.println("roles: " + roles);
@@ -145,13 +169,13 @@ public class GrafBad {
                 }
             }
             LinkedList<Integer> addNew = new LinkedList<>();
-            int value = i-1;
+            int value = i - 1;
             System.err.println("prevalue: " + value);
-            int inc = -1;
+            int inc = - 1;
             while(!testV[value] && (value < testV.length-1)) {
                 value+= inc;
                 if(value < 3){
-                    inc = +1;
+                    inc = + 1;
                 }
             }
             connected++;
@@ -159,14 +183,21 @@ public class GrafBad {
             System.err.println("i: " + i + " post value: " + value);
             testE.put(i-2, addNew); //+3 later
         }
+
+        //debug
         System.err.println("post connected " + connected);
 
+        //print scenes
+        //todo: make faster
         Set<Map.Entry<Integer, LinkedList<Integer>>> set = testE.entrySet();
         for (Map.Entry<Integer, LinkedList<Integer>> edge : set){
+            //io.print((edge.getValue().size()+1) + " " + (edge.getKey() + 3));
             for(Integer value : edge.getValue()) {
                 System.err.println("post value: " + value);
+                //io.print(" " + (value + 3));
                 io.println(2 + " " + (edge.getKey() + 3) + " " + (value + 3));
             }
+            //io.println();
         }
     }
 
