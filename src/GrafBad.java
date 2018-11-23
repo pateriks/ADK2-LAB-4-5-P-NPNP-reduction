@@ -3,22 +3,7 @@ import java.util.*;
 /**
  * Created by Daniel and Patrik on 11/11/2018.
  */
-/*
-6
-5
-4
-3 1 3 4
-2 2 3
-2 1 3
-1 2
-4 1 2 3 4
-2 1 4
-3 1 2 6
-3 2 3 5
-3 2 4 6
-3 2 3 6
-2 1 6
- */
+
 public class GrafBad {
     Kattio io;
     HashMap<Integer, LinkedList<Integer>> testE = new HashMap<Integer, LinkedList<Integer>>();
