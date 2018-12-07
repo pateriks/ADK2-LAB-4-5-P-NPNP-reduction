@@ -143,6 +143,7 @@ public class GrafBad {
         //do this once, iterate roles-connected times
         //makes isolated nodes active
         int i = 0;
+        //om alla är isolerade itererar vi genom antalet noder+3
         while(connected < roles){
             System.err.println("roles: " + roles);
             //look for empty nodes
@@ -157,6 +158,8 @@ public class GrafBad {
             int value = i - 1;
             System.err.println("prevalue: " + value);
             int inc = - 1;
+
+            //tar maximalt n tid för att testV är lika lång som n
             while(!testV[value] && (value < testV.length-1)) {
                 value+= inc;
                 if(value < 3){

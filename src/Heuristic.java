@@ -70,20 +70,19 @@ public class Heuristic {
         LinkedList<Integer> insert;
 
         //todo: make sure actor 1 and 2 does not play in the same role
-        //todo: make sure everyone plays a role in a scen
         if(actors >= 2) {
              //scen 0;
-             assignments.put(0, 0);
+             //assignments.put(0, 0);
 
              //scen 1
-             assignments.put(1, 1);
+             //assignments.put(1, 1);
          }else{
             System.err.println("unsolvable");
             System.exit(0);
         }
 
         long time = System.currentTimeMillis();
-        while (((System.currentTimeMillis() - time)/1000) < 20) {
+        while (((System.currentTimeMillis() - time)/1000) < 4) {
 
             naive();
 
