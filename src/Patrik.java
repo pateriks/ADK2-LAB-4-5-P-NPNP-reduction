@@ -1,7 +1,5 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Random;
+import java.awt.*;
+import java.util.*;
 
 /**
  * Created by Daniel and Patrik on 12/3/2018.
@@ -19,20 +17,21 @@ public class Patrik {
 
     skådespelare[] skådespelarna;
 
-    /*keep track of assigned roles*/
-    boolean[] assignmentCheck;
-
     /*result*/
     HashMap<Integer, Integer> assignments;
     HashMap<Integer, LinkedList<Integer>> scenes;
 
-
     ArrayList<int[]> roleAppearsIn = new ArrayList<>();
 
+    LinkedList<Integer> rolesCheck = new LinkedList<>();
+
+    LinkedList<Integer> superskådisar = new LinkedList<>();
+
+    int totalaSuperskådisar = 0;
+    int totalaOrdinarie = 0;
 
     /*stack variables*/
     int conflicts = 0;
-
 
     Patrik(){
         Kattio io = new Kattio(System.in);
@@ -47,29 +46,26 @@ public class Patrik {
         this.scener = io.getInt();
         this.actors = io.getInt();
 
-        assignmentCheck = new boolean[roller];
-
         assignments = new HashMap<>();
         scenes = new HashMap<>();
         skådespelarna = new skådespelare[actors];
+
         readRoles(io, roller);
         readScenes(io, scener);
+
+        r.setSeed(System.currentTimeMillis());
     }
 
     public void verify (int role){
-        //System.err.println("ROLE to verify: " + role);
-        //System.err.println("Actorset to Role: " + actorset.get(role));
+
         if(actorset.get(role) == null){
             return;
         }
+
         for(Integer i : (LinkedList<Integer>) actorset.get(role)){
-            if(i == null){
-                continue;
-            }
             HashMap<Integer, Integer> checker = new HashMap<>();
             //iterate roles in the scene
             for(int j = 0; j < scenset.get(i).length; j++) {
-
                 if (assignments.get(scenset.get(i)[j]) != null) {
                     int actor = assignments.get(scenset.get(i)[j]);
                     if (checker.containsKey(actor)) {
@@ -100,35 +96,7 @@ public class Patrik {
 
     public String printActors(){
         StringBuilder sb = new StringBuilder();
-        LinkedList<Integer> superskådisar = new LinkedList<>();
 
-        int totalaSuperskådisar = 0;
-        int totalaOrdinarie = 0;
-
-        for(int i = 0; i < roller; i++){
-            if(assignments.containsKey(i)){
-                skådespelarna[assignments.get(i)].addRolePlayed(i);
-                if(skådespelarna[assignments.get(i)].rolesPlayed.size() > 3){
-                    skådespelarna[assignments.get(i)].setLotsOfRoles();
-                }
-            }
-        }
-        /*
-        int iterations = 0;
-        while (doLocalModification() || iterations < 10){
-            iterations++;
-            System.err.println("Iteration: " + iterations);
-        }
-        if(!verification()){
-            System.err.println("we have conflicts");
-        }
-        */
-        for(int i = 0; i < roller; i++){
-            if(!assignments.containsKey(i)){
-                totalaSuperskådisar++;
-                superskådisar.add(i);
-            }
-        }
         for(int i = 0; i < skådespelarna.length; i++){
             if(skådespelarna[i] != null && skådespelarna[i].rolesPlayed.size() != 0){
                 totalaOrdinarie++;
@@ -137,13 +105,14 @@ public class Patrik {
                 for(int role : skådespelarna[i].rolesPlayed) {
                     sb.append(" " + (role+1));
                 }
-
             }
         }
+
         for(int i = 0; i < superskådisar.size(); i++){
             sb.append("\n");
             sb.append((superskådisar.get(i)+actors+1) + " " + 1 + " " + (superskådisar.get(i)+1));
         }
+
         sb.insert(0, (totalaOrdinarie+totalaSuperskådisar));
 
         return sb.toString();
@@ -164,11 +133,13 @@ public class Patrik {
                 if (val == null) {
                     verify(roleDiva2);
                     if (conflicts > 0) {
-                        //System.err.println("CONFLICT " + conflicts);
                         assignments.remove(roleDiva2);
                         conflicts = 0;
                     }else{
                         assignedDiva2 = true;
+                        skådespelarna[1].rolesPlayed.add(roleDiva2);
+                        skådespelarna[0].rolesPlayed.add(roleDiva1);
+                        break;
                     }
                 }
             }
@@ -179,23 +150,63 @@ public class Patrik {
                 break;
             }
         }
-        for (int i = 0; i < roller; i++) {
-            //includes actor 0 and 1 todo: make sure they dont play in the same scene WHERE?
-            for (int k = rollset.get(i).length-1; k >= 0; k--) {
+
+        long millis = System.currentTimeMillis();
+        while (!rolesCheck.isEmpty() && (System.currentTimeMillis()-millis)<1200){
+            int i = rolesCheck.poll();
+            for (int k = 0; k < rollset.get(i).length; k++) {
                 Object val = assignments.putIfAbsent(i, rollset.get(i)[k]);
                 if (val == null) {
                     verify(i);
                     if (conflicts > 0) {
                         assignments.remove(i);
                         conflicts = 0;
+                    }else{
+                        skådespelarna[rollset.get(i)[k]].addRolePlayed(i);
+                        /*
+                        if(skådespelarna[rollset.get(i)[k]].haveMany || skådespelarna[rollset.get(i)[k]].rolesPlayed.size() > 2) {
+                            skådespelarna[rollset.get(i)[k]].haveMany = true;
+                            maximize(rollset.get(i)[k], i);
+                        }
+                        */
+                        maximize(rollset.get(i)[k], i);
+                        break;
                     }
                 }
+            }
+            if(!assignments.containsKey(i)){
+                assignments.put(i, 123);
+                superskådisar.add(i);
+                Collections.sort(superskådisar);
+                totalaSuperskådisar++;
             }
         }
     }
 
     public static void main(String[] args){
         new Patrik();
+    }
+
+    void maximize (int skadespelare, int role){
+        for (int i : skådespelarna[skadespelare].rolesAvailable){
+            Object val = assignments.putIfAbsent(i, skadespelare);
+            if(val == null) {
+                verify(i);
+                if (conflicts > 0) {
+                    assignments.remove(i);
+                    conflicts = 0;
+                }else{
+                    skådespelarna[skadespelare].addRolePlayed(i);
+                    rolesCheck.remove((Integer) i);
+                    /*
+                    if(superskådisar.contains(i)){
+                        superskådisar.remove((Integer) i);
+                        totalaSuperskådisar--;
+                    }
+                    */
+                }
+            }
+        }
     }
 
     /*------------------------Read inputs--------------------- */
@@ -214,6 +225,7 @@ public class Patrik {
                 skådisar[line[i]].addAvailableRole(roleNumber);
             }
             ret.add(line);
+            rolesCheck.add(amount-1);
             amount--;
             roleNumber++;
         }
@@ -260,71 +272,6 @@ public class Patrik {
         }
         public void setLotsOfRoles(){
             this.haveMany = true;
-        }
-    }
-
-
-    /******************************************Crazy*********************************************/
-
-    public boolean doLocalModification(){
-        boolean didAswapWork = false;
-        for(int i = 0; i < skådespelarna.length; i++){
-            if(skådespelarna[i].rolesPlayed.size() > 0) {
-                if (!skådespelarna[i].haveMany) {
-                    for (int j = 0; j < skådespelarna[i].rolesPlayed.size(); j++) {
-                        if(!(i == 0 && skådespelarna[0].rolesPlayed.size() < 2) && !(i == 1 && skådespelarna[1].rolesPlayed.size() < 2)) {
-                            int roleToSwap = skådespelarna[i].rolesPlayed.get(j);
-                            boolean swapped = false;
-                            for (int k = 0; k < rollset.get(roleToSwap).length; k++) {
-                                if(!swapped) {
-                                    int actorToTake = rollset.get(roleToSwap)[k];
-                                    if (skådespelarna[actorToTake].rolesPlayed.size() > 0 && actorToTake != i) {
-                                        assignments.remove(roleToSwap);
-                                        Object val = assignments.putIfAbsent(roleToSwap, actorToTake);
-                                        if (val == null) {
-                                            //verify();
-                                            if (conflicts > 0) {
-                                                //System.err.println("CONFLICT " + conflicts);
-                                                assignments.remove(roleToSwap);
-                                                assignments.putIfAbsent(roleToSwap, i);
-                                                conflicts = 0;
-                                            } else if (skådespelarna[i].rolesPlayed.size() != 0) {
-                                                skådespelarna[i].rolesPlayed.remove(j);
-                                                skådespelarna[actorToTake].addRolePlayed(roleToSwap);
-                                                System.err.println("i removed " + roleToSwap + " and gave to " + actorToTake);
-                                                System.err.println("skådis = " + i + " rollplats " + j);
-                                                swapped = true;
-                                                didAswapWork = true;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        checkIfSuperCanbeRemoved();
-                    }
-                }
-            }
-        }
-        return didAswapWork;
-    }
-
-    public void checkIfSuperCanbeRemoved(){
-        for (int i = 0; i < roller; i++) {
-            if(!assignments.containsKey(i)) {
-                //includes actor 0 and 1 todo: make sure they dont play in the same scene WHERE?
-                for (int k = 0; k < rollset.get(i).length; k++) {
-                    Object val = assignments.putIfAbsent(i, rollset.get(i)[k]);
-                    if (val == null) {
-                        //verify();
-                        if (conflicts > 0) {
-                            //System.err.println("CONFLICT " + conflicts);
-                            assignments.remove(i);
-                            conflicts = 0;
-                        }
-                    }
-                }
-            }
         }
     }
 }
