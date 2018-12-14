@@ -33,7 +33,7 @@ public class Labb5 {
 
     int conflicts = 0;
 
-    Patrik(){
+    Labb5(){
         Kattio io = new Kattio(System.in);
         init(io);
         io.println(solve());
