@@ -3,7 +3,7 @@ import java.util.*;
 /**
  * Created by Daniel and Patrik on 12/3/2018.
  */
-public class Patrik {
+public class Labb5 {
 
     Random r = new Random();
     long millis;
@@ -204,7 +204,7 @@ public class Patrik {
     }
 
     public static void main(String[] args){
-        new Patrik();
+        new Labb5();
     }
 
     void maximize (int skadespelare, int role){
