@@ -4,7 +4,7 @@ import java.util.*;
  * Created by Daniel and Patrik on 11/11/2018.
  */
 
-public class GrafBad {
+public class Labb4 {
     Kattio io;
     HashMap<Integer, LinkedList<Integer>> testE = new HashMap<Integer, LinkedList<Integer>>();
     Boolean[] testV;
@@ -189,14 +189,14 @@ public class GrafBad {
         }
     }
 
-    GrafBad(){
+    Labb4(){
         io = new Kattio(System.in, System.out);
         createReduction();
         io.close();
     }
 
     public static void main(String[] args){
-        new GrafBad();
+        new Labb4();
     }
 
 }
