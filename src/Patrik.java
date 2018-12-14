@@ -1,4 +1,3 @@
-import java.awt.*;
 import java.util.*;
 
 /**
@@ -7,30 +6,31 @@ import java.util.*;
 public class Patrik {
 
     Random r = new Random();
-
+    long millis;
     int roller, scener, actors;
 
-    /*store input in memory*/
-    ArrayList<int[]> rollset = new ArrayList<>();
-    ArrayList<int[]> scenset = new ArrayList<>();
-    HashMap<Integer, LinkedList> actorset = new HashMap<>();
-
+    /*rollset is a map of [x, y] where x point out a role and y is an actor. It means that role x can be played by actor x */
+    ArrayList<int[]> rollset;
+    /*scenset is a map of [x, y] where x scene and y role in scene*/
+    ArrayList<int[]> scenset;
+    /*rolesScenes is a map from x to a list of scenes where that role is present*/
+    HashMap<Integer, LinkedList> rolesScenes = new HashMap<>();
+    /*every actor has a list of roles played and what roles that the actor can play */
     skådespelare[] skådespelarna;
 
-    /*result*/
+    /* points out a actor (value) for a (key) given role */
     HashMap<Integer, Integer> assignments;
-    HashMap<Integer, LinkedList<Integer>> scenes;
 
-    ArrayList<int[]> roleAppearsIn = new ArrayList<>();
-
+    /* check whether all roles has a assignment (cannot be done with hashmap)*/
     LinkedList<Integer> rolesCheck = new LinkedList<>();
 
+    /* stores roles given to super actors */
     LinkedList<Integer> superskådisar = new LinkedList<>();
 
+    /* count number of actors under assignment */
     int totalaSuperskådisar = 0;
     int totalaOrdinarie = 0;
 
-    /*stack variables*/
     int conflicts = 0;
 
     Patrik(){
@@ -47,22 +47,24 @@ public class Patrik {
         this.actors = io.getInt();
 
         assignments = new HashMap<>();
-        scenes = new HashMap<>();
         skådespelarna = new skådespelare[actors];
 
         readRoles(io, roller);
         readScenes(io, scener);
 
+        millis = System.currentTimeMillis();
         r.setSeed(System.currentTimeMillis());
     }
 
     public void verify (int role){
-
-        if(actorset.get(role) == null){
+        //get interesting scenes (where role is present)
+        if(rolesScenes.get(role) == null){
+            //hey what are you doing here, A role without any scene, why??
+            //System.exit(1);
             return;
         }
-
-        for(Integer i : (LinkedList<Integer>) actorset.get(role)){
+        for(Integer i : (LinkedList<Integer>) rolesScenes.get(role)){
+            //checker is used to dynamically see what keys are used (value is ignored)
             HashMap<Integer, Integer> checker = new HashMap<>();
             //iterate roles in the scene
             for(int j = 0; j < scenset.get(i).length; j++) {
@@ -81,15 +83,24 @@ public class Patrik {
     }
 
     public String solve(){
-
-        if(actors >= 2) {
-        }else{
-            System.err.println("unsolvable");
-            System.exit(0);
+        //System.err.println(actors);
+        if(actors < 2){
+            System.exit(1);
         }
-
+/*
+        for(int i = 0; i < roller; i++){
+            if(rolesScenes.get(i) == null){
+                if(rollset.get(i) == null){
+                    System.exit(1);
+                }else if(rollset.get(i).length == 0){
+                    System.exit(1);
+                }
+                assignments.put(i, rollset.get(i)[0]);
+                skådespelarna[rollset.get(i)[0]].rolesPlayed.add(i);
+            }
+        }
+*/
         naive();
-
         return printActors();
     }
 
@@ -97,7 +108,13 @@ public class Patrik {
     public String printActors(){
         StringBuilder sb = new StringBuilder();
 
-        for(int i = 0; i < skådespelarna.length; i++){
+        for(int i = 0; i < roller; i++){
+            if(assignments.get(i) == null){
+                superskådisar.add(i);
+            }
+        }
+
+        for(int i = 0; i < actors; i++){
             if(skådespelarna[i] != null && skådespelarna[i].rolesPlayed.size() != 0){
                 totalaOrdinarie++;
                 sb.append("\n");
@@ -111,6 +128,7 @@ public class Patrik {
         for(int i = 0; i < superskådisar.size(); i++){
             sb.append("\n");
             sb.append((superskådisar.get(i)+actors+1) + " " + 1 + " " + (superskådisar.get(i)+1));
+            totalaSuperskådisar++;
         }
 
         sb.insert(0, (totalaOrdinarie+totalaSuperskådisar));
@@ -124,61 +142,63 @@ public class Patrik {
          */
         boolean assignedDiva2 = false;
         int j = 0;
-        while(true) {
+
+        while(j < skådespelarna[0].rolesAvailable.size()) {
             int roleDiva1 = skådespelarna[0].rolesAvailable.get(j);
-            assignments.putIfAbsent(roleDiva1, 0);
-            for (int i = 0; i < skådespelarna[1].rolesAvailable.size(); i++) {
-                int roleDiva2 = skådespelarna[1].rolesAvailable.get(i);
-                Object val = assignments.putIfAbsent(roleDiva2, 1);
-                if (val == null) {
-                    verify(roleDiva2);
-                    if (conflicts > 0) {
-                        assignments.remove(roleDiva2);
-                        conflicts = 0;
-                    }else{
-                        assignedDiva2 = true;
-                        skådespelarna[1].rolesPlayed.add(roleDiva2);
-                        skådespelarna[0].rolesPlayed.add(roleDiva1);
-                        break;
+            Object check = assignments.putIfAbsent(roleDiva1, 0);
+            if(check == null) {
+                for (int i = 0; i < skådespelarna[1].rolesAvailable.size(); i++) {
+                    int roleDiva2 = skådespelarna[1].rolesAvailable.get(i);
+                    Object val = assignments.putIfAbsent(roleDiva2, 1);
+                    if (val == null) {
+                        verify(roleDiva2);
+                        if (conflicts > 0) {
+                            assignments.remove(roleDiva2);
+                            conflicts = 0;
+                        } else {
+                            assignedDiva2 = true;
+                            skådespelarna[1].rolesPlayed.add(roleDiva2);
+                            skådespelarna[0].rolesPlayed.add(roleDiva1);
+                            break;
+                        }
                     }
                 }
+                if(assignedDiva2){
+                    break;
+                }else{
+                    assignments.remove(roleDiva1);
+                }
             }
-            if(!assignedDiva2){
-                assignments.remove(roleDiva1);
-                j++;
-            }else{
-                break;
-            }
+            j++;
         }
 
-        long millis = System.currentTimeMillis();
-        while (!rolesCheck.isEmpty() && (System.currentTimeMillis()-millis)<1200){
-            int i = rolesCheck.poll();
-            for (int k = 0; k < rollset.get(i).length; k++) {
+
+        int iterations = 0;
+        //(iterations < roller && (System.currentTimeMillis()-millis)<1250){//
+        while (!rolesCheck.isEmpty() && (System.currentTimeMillis()-millis)<1300){
+            //poll: retrive and delete
+
+            int i = rolesCheck.get(r.nextInt(rolesCheck.size()));
+            rolesCheck.remove((Integer) i);
+            //int i = iterations;
+
+            //iterations++;
+            for (int k = rollset.get(i).length-1; k >= 0; k--) {
                 Object val = assignments.putIfAbsent(i, rollset.get(i)[k]);
                 if (val == null) {
                     verify(i);
                     if (conflicts > 0) {
+                        //System.err.println("ROLE: " + i + " not added to actor: " + rollset.get(i)[k] + " conflicts: " + conflicts);
+                        //System.err.println(assignments);
                         assignments.remove(i);
                         conflicts = 0;
                     }else{
+                        //System.err.println("ROLE: " + i + " added to actor: " + rollset.get(i)[k]);
                         skådespelarna[rollset.get(i)[k]].addRolePlayed(i);
-                        /*
-                        if(skådespelarna[rollset.get(i)[k]].haveMany || skådespelarna[rollset.get(i)[k]].rolesPlayed.size() > 2) {
-                            skådespelarna[rollset.get(i)[k]].haveMany = true;
-                            maximize(rollset.get(i)[k], i);
-                        }
-                        */
                         maximize(rollset.get(i)[k], i);
                         break;
                     }
                 }
-            }
-            if(!assignments.containsKey(i)){
-                assignments.put(i, 123);
-                superskådisar.add(i);
-                Collections.sort(superskådisar);
-                totalaSuperskådisar++;
             }
         }
     }
@@ -198,12 +218,8 @@ public class Patrik {
                 }else{
                     skådespelarna[skadespelare].addRolePlayed(i);
                     rolesCheck.remove((Integer) i);
-                    /*
-                    if(superskådisar.contains(i)){
-                        superskådisar.remove((Integer) i);
-                        totalaSuperskådisar--;
-                    }
-                    */
+                    // Kan det hör inträffa?
+                    //superskådisar.remove((Integer) i);
                 }
             }
         }
@@ -225,7 +241,7 @@ public class Patrik {
                 skådisar[line[i]].addAvailableRole(roleNumber);
             }
             ret.add(line);
-            rolesCheck.add(amount-1);
+            rolesCheck.push(roleNumber);
             amount--;
             roleNumber++;
         }
@@ -241,18 +257,19 @@ public class Patrik {
             int[] line = new int[nrLine];
             for (int i = 0; i < nrLine; i++) {
                 line[i] = in.getInt() - 1;
-                LinkedList<Integer> toPush = actorset.get(line[i]);
+                LinkedList<Integer> toPush = rolesScenes.get(line[i]);
                 if(toPush == null){
                     //System.err.println("pushed " +  line[i]);
                     toPush = new LinkedList<>();
                 }
                 toPush.add(scen);
-                actorset.put(line[i], toPush);
+                rolesScenes.put(line[i], toPush);
             }
             ret.add(line);
             scen++;
             amount--;
         }
+        //System.err.println(rolesScenes);
         this.scenset = ret;
     }
 
